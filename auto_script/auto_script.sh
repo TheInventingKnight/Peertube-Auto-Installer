@@ -96,7 +96,7 @@ read -p "Enter the DB NAME (Default: ${temp_db}): " db_name
 if [ -z ${db_name} ] ; then
   db_name=${temp_db}
 fi 
-  
+
 while true; do
   read -p "Enter SMTP_HOST name: " smtp_host
   if [ -n "$smtp_host" ]; then
@@ -167,111 +167,6 @@ done
 
  secret_key=$(openssl rand -hex 32)
 
-
-
-# Remove old docker container if docker already present 
-if docker -v &>/dev/null; then
-  sudo docker rm -f $(docker ps -a -q)
-  sudo docker volume rm -f $(docker volume ls -q)
-fi
-
-# install new version of docker
-sudo apt-get update -y
-sudo apt-get install -y ca-certificates curl gnupg lsb-release
-if test -f /usr/share/keyrings/docker-archive-keyring.gpg; then
- sudo rm /usr/share/keyrings/docker-archive-keyring.gpg
-fi
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update -y
-sudo apt-get install -y  docker-ce docker-ce-cli containerd.io docker-compose-plugin
-sudo apt  install docker-compose -y
-  
-
-# assign work directory
-work_dir=/peertube
-# Remove old work directory if present
-sudo rm -rf ${work_dir}
-# Make new work directory
-mkdir ${work_dir}
-
-# create blank a enviromental files for Mastodon
-
-
-touch ${work_dir}/docker-compose.yml
-touch ${work_dir}/.env
-
-cat <<docker_content >>${work_dir}/docker-compose.yml
-version: "3.3"
-services:
-  peertube:
-    image: chocobozzz/peertube:production-bookworm
-    env_file:
-      - .env
-    ports:
-     - "1935:1935"
-     - "9000:9000" 
-    volumes:
-      -  assets:/app/client/dist
-      - ./docker-volume/data:/data
-      - ./docker-volume/config:/config
-    depends_on:
-      - postgres
-      - redis
-    restart: "always"
-  postgres:
-    image: postgres:13-alpine
-    env_file:
-      - .env
-    volumes:
-      - ./docker-volume/db:/var/lib/postgresql/data
-    restart: "always"
-  redis:
-    image: redis:6-alpine
-    volumes:
-      - ./docker-volume/redis:/data
-    restart: "always"
-volumes:
-  assets:
-docker_content
- 
-
-# Add content in the .env.peertube
-cat <<peertube_env >> ${work_dir}/.env
-POSTGRES_USER=${db_user}
-POSTGRES_PASSWORD=${db_password}
-POSTGRES_DB=${db_name}
-PEERTUBE_DB_NAME=${db_name}
-#PEERTUBE_DB_SUFFIX=_prod
-PEERTUBE_DB_USERNAME=${db_user}
-PEERTUBE_DB_PASSWORD=${db_password}
-PEERTUBE_DB_SSL=false
-PEERTUBE_DB_HOSTNAME=postgres
-PEERTUBE_WEBSERVER_HOSTNAME=${domain_name}
-PEERTUBE_WEBSERVER_HTTPS=true
-PEERTUBE_TRUST_PROXY=["127.0.0.1", "loopback", "172.18.0.0/16"]
-PEERTUBE_SECRET=${secret_key}
-PEERTUBE_SMTP_USERNAME=${smtp_user}
-PEERTUBE_SMTP_PASSWORD=${smtp_password}
-PEERTUBE_SMTP_HOSTNAME=${smtp_host}
-PEERTUBE_SMTP_PORT=${smtp_port}
-PEERTUBE_SMTP_FROM=${smtp_from}
-PEERTUBE_SMTP_TLS=false
-PEERTUBE_SMTP_DISABLE_STARTTLS=false
-PEERTUBE_ADMIN_EMAIL=${admin_email}
-POSTFIX_myhostname=${domain_name}
-OPENDKIM_DOMAINS=${domain_name}=peertube
-OPENDKIM_RequireSafeKeys=no
-PEERTUBE_OBJECT_STORAGE_UPLOAD_ACL_PUBLIC="public-read"
-PEERTUBE_OBJECT_STORAGE_UPLOAD_ACL_PRIVATE="private"
-
-PEERTUBE_SIGNUP_ENABLED=true
-PEERTUBE_TRANSCODING_ENABLED=true
-PEERTUBE_CONTACT_FORM_ENABLED=true
-
-peertube_env
-
-docker compose -f ${work_dir}/docker-compose.yml up -d
 
 
 # Setting up the nginx 
