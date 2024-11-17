@@ -248,17 +248,6 @@ sudo systemctl restart nginx
 # Config ufw firewall to allow Nginx ports. Skip if your server doesn't have ufw.
 sudo ufw allow 'Nginx Full'
 
-# Secure Mastodon with Let's Encrypt SSL
-sudo apt-get install -y certbot python3-certbot-nginx
-
-# Generate the ssl certificate for domain
-sudo certbot --nginx -d ${domain_name}
-
-systemctl restart nginx
-
-admin_password=$(docker logs peertube-peertube-1 | grep password | awk -F 'password: ' '{print $2}')
-
-
 # change ssh port
 sudo cp /etc/ssh/ssh_config /etc/ssh/ssh_config_copy
 sudo rm /etc/ssh/ssh_config
