@@ -9,7 +9,7 @@ echo "#                        www.honeytreetech.com                       #"
 echo "#                                                                    #"
 echo "#                    Mastodon: honeytree.social                      #"
 echo "#                    Email: info@honeytreetech.com                   #"
-echo "#                                                                    #"
+echo "#                               blah                                     #"
 echo "#1#####################################################################"
 
 # Pause the script for 3 seconds to allow the user to read the header
